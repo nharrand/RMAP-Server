@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rmap"
+version = "0.1.0"
+description = "Roger Michael Authentication Protocol (RMAP) server-side library for JSON-based request/response using OpenPGP (no networking)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "Your Name", email = "you@example.com" }
+]
+dependencies = [
+  "pgpy>=0.6.0"
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=7.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/nharrand/RMAP-Server"
+Repository = "https://github.com/nharrand/RMAP-Server.git"
+
+# --- src-layout config ---
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["rmap*"]
+
+# --- pytest config ---
+[tool.pytest.ini_options]
+# If your tests live in 'tests/', leave as-is; change to ["test"] if your folder is named 'test'.
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"
+
