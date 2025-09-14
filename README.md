@@ -7,6 +7,15 @@ Disclaimer: This library is intended to be use solely in the context of a softwa
 
 ## Usage
 
+Add the library to your pyproject.toml:
+
+```toml
+[project]
+dependencies = [
+  "rmap @ git+https://github.com/nharrand/RMAP-Server.git@v1.0.0"
+]
+```
+
 ```python
 #Creating an IdentityManager
 IdentityManager(client_keys_dir, server_public_key_path, server_private_key_path, server_private_key_passphrase=None)
