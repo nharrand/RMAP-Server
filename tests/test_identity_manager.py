@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 from pgpy import PGPKey, PGPMessage
+from rmap.compat_helpers import _armored_from_armor_body
 
 from rmap.identity_manager import (
     IdentityManager,
@@ -107,8 +108,9 @@ def test_encrypt_for_identity_and_decrypt_with_client_priv(identity_manager_env)
     payload_b64 = im.encrypt_for_identity("Jean", resp_obj)
 
     # Decrypt using Jean's private key to verify contents
-    armored = base64.b64decode(payload_b64).decode("utf-8")
-    pgp_msg = PGPMessage.from_blob(armored)
+    #armored = base64.b64decode(payload_b64).decode("utf-8")
+    #pgp_msg = PGPMessage.from_blob(armored)
+    pgp_msg = PGPMessage.from_blob(_armored_from_armor_body(payload_b64))
     decrypted = jean_priv.decrypt(pgp_msg).message
     out = json.loads(decrypted)
 

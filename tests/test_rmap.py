@@ -9,6 +9,7 @@ from pgpy import PGPKey, PGPMessage
 
 from rmap.identity_manager import IdentityManager
 from rmap.rmap import RMAP
+from rmap.compat_helpers import _armored_from_armor_body
 
 
 @pytest.fixture(scope="module")
@@ -58,8 +59,9 @@ def test_message1_success_flow(rmap_env):
     assert "payload" in resp1 and "error" not in resp1
 
     # Client (Jean) decrypts response to verify it's encrypted to her key
-    armored = base64.b64decode(resp1["payload"]).decode("utf-8")
-    pgp = PGPMessage.from_blob(armored)
+    #armored = base64.b64decode(resp1["payload"]).decode("utf-8")
+    #pgp = PGPMessage.from_blob(armored)
+    pgp = PGPMessage.from_blob(_armored_from_armor_body(resp1["payload"]))
     plaintext = jean_priv.decrypt(pgp).message
     out = json.loads(plaintext)
 

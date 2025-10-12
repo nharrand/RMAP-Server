@@ -6,6 +6,7 @@ import base64
 import json
 from pathlib import Path
 from typing import Dict, Optional, Union
+from rmap.compat_helpers import decrypt_forgiving_json, _armor_body_from_armored
 
 try:
     # Pure-Python OpenPGP implementation (no gpg binary required)
@@ -143,7 +144,8 @@ class IdentityManager:
             message = PGPMessage.new(plaintext)
             encrypted = self.identity_public_keys[identity].encrypt(message)
             armored = str(encrypted)  # ASCII-armored PGP message (-----BEGIN PGP MESSAGE----- ...)
-            return base64.b64encode(armored.encode("utf-8")).decode("ascii")
+            #return base64.b64encode(armored.encode("utf-8")).decode("ascii")
+            return _armor_body_from_armored(armored)
         except Exception as exc:
             raise EncryptionError(f"Failed to encrypt for identity '{identity}': {exc}") from exc
 
@@ -167,36 +169,9 @@ class IdentityManager:
             If the payload cannot be base64-decoded, decrypted, or parsed as JSON.
         """
         # Decode Base64 to get the ASCII-armored PGP text
-        try:
-            armored_bytes = base64.b64decode(payload_b64, validate=True)
-        except Exception as exc:
-            raise DecryptionError(f"Payload is not valid Base64: {exc}") from exc
 
         try:
-            pgp_message = PGPMessage.from_blob(armored_bytes)
-        except Exception as exc:
-            raise DecryptionError(f"Payload is not a valid OpenPGP message: {exc}") from exc
-
-        try:
-            if self.server_private_key.is_protected and self._server_passphrase is None:
-                raise DecryptionError(
-                    "Server private key is passphrase-protected but no passphrase was provided."
-                )
-
-            if self.server_private_key.is_protected:
-                with self.server_private_key.unlock(self._server_passphrase):
-                    decrypted = self.server_private_key.decrypt(pgp_message)
-            else:
-                decrypted = self.server_private_key.decrypt(pgp_message)
-
-            plaintext = decrypted.message  # str
-        except DecryptionError:
-            raise
-        except Exception as exc:
-            raise DecryptionError(f"OpenPGP decryption failed: {exc}") from exc
-
-        try:
-            return json.loads(plaintext)
+            return decrypt_forgiving_json(self.server_private_key, payload_b64, self._server_passphrase)
         except Exception as exc:
             raise DecryptionError(f"Decrypted payload is not valid JSON: {exc}") from exc
 
@@ -207,7 +182,7 @@ class IdentityManager:
     # -------------------------
     # Helper for tests / utilities
     # -------------------------
-
+        
     def encrypt_for_server(self, payload_obj: dict) -> str:
         """
         Utility: encrypt a JSON object **to the server's public key**.
@@ -224,6 +199,7 @@ class IdentityManager:
             encrypted = self.server_public_key.encrypt(message)
             armored = str(encrypted)
             return base64.b64encode(armored.encode("utf-8")).decode("ascii")
+            #return cleanup(armored)
         except Exception as exc:
             raise EncryptionError(f"Failed to encrypt for server: {exc}") from exc
 
